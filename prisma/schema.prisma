@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StudentRole {
+  student
+}
+
+enum AdminRole {
+  admin
+}
+
+enum DoctorRole {
+  doctor
+}
+
+model Student {
+  studentId    String      @id
+  name         String
+  email        String      @unique
+  password     String
+  department   String
+  batch        String
+  role         StudentRole
+  profileImage String?     @default("https://res.cloudinary.com/dqnw5qaoq/image/upload/v1704119134/gws3txwehxg1fshckiax.png")
+  Booklet      Booklet?
+
+  @@map("students")
+}
+
+model Admin {
+  adminId      String    @id
+  name         String
+  email        String    @unique
+  password     String
+  role         AdminRole
+  profileImage String?   @default("https://res.cloudinary.com/dqnw5qaoq/image/upload/v1704119134/gws3txwehxg1fshckiax.png")
+
+  @@map("admin")
+}
+
+model Doctor {
+  doctorId     String         @id
+  name         String
+  email        String         @unique
+  password     String
+  profileImage String?        @default("https://res.cloudinary.com/dqnw5qaoq/image/upload/v1704119134/gws3txwehxg1fshckiax.png")
+  designation  String
+  role         DoctorRole
+  Prescription Prescription[]
+
+  @@map("doctors")
+}
+
+model Booklet {
+  serialNo     Int            @id @default(autoincrement())
+  studentId    String         @unique
+  mobileNo     String         @unique
+  Level        Int
+  Term         Int
+  session      String
+  hallName     String
+  bloodGroup   String
+  resident     Boolean
+  student      Student        @relation(fields: [studentId], references: [studentId])
+  Prescription Prescription[]
+
+  @@map("booklets")
+}
+
+model Prescription {
+  prescriptionId        String                  @id @default(uuid())
+  bookletId             Int
+  date                  String
+  description           String?
+  doctorId              String
+  booklet               Booklet                 @relation(fields: [bookletId], references: [serialNo])
+  doctor                Doctor                  @relation(fields: [doctorId], references: [doctorId])
+  Prescription_medicine Prescription_medicine[]
+
+  @@map("prescriptions")
+}
+
+model Prescription_medicine {
+  prescriptionId String
+  name           String
+  dose           String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [prescriptionId])
+
+  @@id([prescriptionId, name])
+  @@map("medicines")
+}
